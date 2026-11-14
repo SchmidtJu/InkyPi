@@ -27,18 +27,20 @@
     </div>
 
     <!-- Data Points Grid (Sunset, Wind, UV, etc.) -->
-    {% if plugin_settings.displayMetrics and  plugin_settings.displayMetrics == "true" %}
-    <div class="data-points">
-      {% for dp in data_points if dp.key in ["Sunrise", "Sunset", "Wind", "UV Index"] %}
+    {% if data_points %}
+    {% set metric_count = data_points | length %}
+    <div class="data-points{% if metric_count <= 6 %} data-points--compact{% endif %}"
+         style="--metric-count: {{ metric_count }}; --portrait-metric-columns: {{ [2, (metric_count + 1) // 2] | max }};">
+      {% for dp in data_points %}
         <div class="data-point column-container">
           <div class="data-point-img-container">
-            <img class="data-point-icon" src="{{dp.icon}}" alt="{{ dp.label }}">
+            <img class="data-point-icon" src="{{ dp.icon }}" alt="">
           </div>
           <div class="data-point-data">
             <div class="data-point-label">{{ dp.label }}</div>
             <div class="data-point-measurement">
 			        {{ dp.measurement }}{% if dp.unit %}<span class="data-point-unit">{{ dp.unit }}</span>{% endif %}
-              {% if dp.key == "Wind" %}
+              {% if dp.arrow is defined %}
                 <span class="wind-arrow-symbol">{{ dp.arrow }}</span>
               {% endif %}
 		    	 </div>

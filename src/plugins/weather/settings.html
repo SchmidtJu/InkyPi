@@ -57,16 +57,28 @@
 </div>
 
 <div class="form-group">
-    <label for="displayMetrics" class="form-label">Display: </label>
+    <span class="form-label">Display: </span>
 
     <div class="form-group">
       <input type="checkbox" id="displayRefreshTime" name="displayRefreshTime" onclick="this.value=this.checked ? 'true' : 'false';">
       <span>Refresh Time</span>
     </div>
 
-    <div class="form-group">
-        <input type="checkbox" id="displayMetrics" name="displayMetrics" onclick="this.value=this.checked ? 'true' : 'false';">
-        <span>Metrics</span>
+    {% set saved_settings = plugin_settings | default({}) %}
+    <div class="form-group" id="weatherMetricOptions" style="flex-basis: 100%;">
+        <label>
+            <input type="checkbox" id="displayMetrics" name="displayMetrics"
+                   {% if not plugin_instance or saved_settings.get('displayMetrics') == 'true' %}checked{% endif %}>
+            Metrics
+        </label>
+        <div class="form-group" role="group" aria-label="Individual metrics" style="flex-basis: 100%; margin-left: 1.5rem;">
+            {% for setting, label in metric_labels.items() %}
+            <label>
+                <input type="checkbox" name="{{ setting }}" {% if saved_settings.get(setting, 'true' if not plugin_instance or setting in legacy_metric_settings else 'false') == 'true' %}checked{% endif %}>
+                <span>{{ label }}</span>
+            </label>
+            {% endfor %}
+        </div>
     </div>
 
     <div class="form-group">
@@ -236,6 +248,13 @@
 
     document.addEventListener('DOMContentLoaded', () => {
 
+        const metricOptions = document.querySelectorAll('#weatherMetricOptions input');
+        document.getElementById('settingsForm').addEventListener('formdata', ({ formData }) => {
+            for (const option of metricOptions) {
+                formData.set(option.name, String(option.checked));
+            }
+        });
+
         const OSM_TILE_URL = 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
         const $latitude = document.querySelector('#latitude');
         const $longitude = document.querySelector('#longitude');
@@ -323,9 +342,6 @@
             document.getElementById('displayRefreshTime').checked = pluginSettings.displayRefreshTime;
             document.getElementById('displayRefreshTime').value = pluginSettings.displayRefreshTime;
 
-            document.getElementById('displayMetrics').checked = pluginSettings.displayMetrics;
-            document.getElementById('displayMetrics').value = pluginSettings.displayMetrics;
-
             document.getElementById('displayGraph').checked = pluginSettings.displayGraph;
             document.getElementById('displayGraph').value = pluginSettings.displayGraph;
 
@@ -355,8 +371,6 @@
             document.getElementById('units').value = "imperial";
             document.getElementById('displayRefreshTime').checked = true;
             document.getElementById('displayRefreshTime').value = "true";
-            document.getElementById('displayMetrics').checked = true;
-            document.getElementById('displayMetrics').value = "true";
             document.getElementById('displayGraph').checked = true;
             document.getElementById('displayGraph').value = "true";
 			document.getElementById('displayRain').checked = false;

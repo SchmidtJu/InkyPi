@@ -235,6 +235,20 @@ def get_ui_label(key, language, default=None):
         return locale["ui"].get(key, default or key)
     return default or key
 
+METRIC_SETTINGS = {
+    'Sunrise': 'displaySunrise',
+    'Sunset': 'displaySunset',
+    'Wind': 'displayWind',
+    'Humidity': 'displayHumidity',
+    'Pressure': 'displayPressure',
+    'UV Index': 'displayUVIndex',
+    'Visibility': 'displayVisibility',
+    'Air Quality': 'displayAirQuality',
+}
+# Preserve the Pi's previous selection for saved instances with no per-metric settings.
+LEGACY_METRICS = frozenset(("Sunrise", "Sunset", "Wind", "UV Index"))
+
+
 class Weather(BasePlugin):
     def generate_settings_template(self):
         template_params = super().generate_settings_template()
@@ -244,6 +258,8 @@ class Weather(BasePlugin):
             "expected_key": "OPEN_WEATHER_MAP_SECRET"
         }
         template_params['style_settings'] = True
+        template_params['metric_labels'] = {setting: label for label, setting in METRIC_SETTINGS.items()}
+        template_params['legacy_metric_settings'] = [METRIC_SETTINGS[label] for label in LEGACY_METRICS]
         return template_params
 
     def generate_image(self, settings, device_config):
@@ -305,6 +321,14 @@ class Weather(BasePlugin):
             dimensions = dimensions[::-1]
 
         template_params["plugin_settings"] = settings
+        if settings.get("displayMetrics") == "true":
+            template_params["data_points"] = [
+                point for point in template_params["data_points"]
+                if settings.get(METRIC_SETTINGS[point["key"]],
+                                "true" if point["key"] in LEGACY_METRICS else "false") == "true"
+            ]
+        else:
+            template_params["data_points"] = []
 
         # Add last refresh time
         now = datetime.now(tz)
