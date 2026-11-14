@@ -29,7 +29,7 @@
     <!-- Data Points Grid (Sunset, Wind, UV, etc.) -->
     {% if plugin_settings.displayMetrics and  plugin_settings.displayMetrics == "true" %}
     <div class="data-points">
-      {% for dp in data_points %}
+      {% for dp in data_points if dp.key in ["Sunrise", "Sunset", "Wind", "UV Index"] %}
         <div class="data-point column-container">
           <div class="data-point-img-container">
             <img class="data-point-icon" src="{{dp.icon}}" alt="{{ dp.label }}">
